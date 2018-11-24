@@ -18,6 +18,8 @@ BuildSettings::BuildSettings(const BuildSettings& other)
       secondary_source_path_(other.secondary_source_path_),
       python_path_(other.python_path_),
       build_config_file_(other.build_config_file_),
+      build_config_root_path_(other.build_config_root_path_),
+      build_config_root_path_utf8_(other.build_config_root_path_utf8_),
       arg_file_template_path_(other.arg_file_template_path_),
       build_dir_(other.build_dir_),
       build_args_(other.build_args_) {}
@@ -32,6 +34,20 @@ void BuildSettings::SetRootPath(const base::FilePath& r) {
   DCHECK(r.value()[r.value().size() - 1] != base::FilePath::kSeparators[0]);
   root_path_ = r.NormalizePathSeparatorsTo('/');
   root_path_utf8_ = FilePathToUTF8(root_path_);
+}
+
+void BuildSettings::SetBuildConfigRootPath(const base::FilePath& r) {
+  DCHECK(r.value()[r.value().size() - 1] != base::FilePath::kSeparators[0]);
+  if (r == UTF8ToFilePath("GN_INSTALL_PATH"))
+  {
+    //PathService::Get(base::DIR_EXE, &build_config_root_path_);
+    //build_config_root_path_utf8_ = FilePathToUTF8(build_config_root_path_);
+  }
+  else
+  {
+    build_config_root_path_ = r.NormalizePathSeparatorsTo('/');
+    build_config_root_path_utf8_ = FilePathToUTF8(build_config_root_path_);
+  }
 }
 
 void BuildSettings::SetSecondarySourcePath(const SourceDir& d) {
@@ -68,6 +84,21 @@ base::FilePath BuildSettings::GetFullPathSecondary(const std::string& path,
                                                    bool as_file) const {
   return ResolvePath(path, as_file, secondary_source_path_)
       .NormalizePathSeparatorsTo('/');
+}
+
+base::FilePath BuildSettings::GetFullPathBuildConfig(const SourceFile& file) const
+{
+  return file.Resolve(build_config_root_path_).NormalizePathSeparatorsTo('/');
+}
+
+base::FilePath BuildSettings::BuildSettings::GetFullPathBuildConfig(const SourceDir& dir) const
+{
+  return dir.Resolve(build_config_root_path_).NormalizePathSeparatorsTo('/');
+}
+
+base::FilePath BuildSettings::GetFullPathBuildConfig(const std::string& path, bool as_file) const
+{
+  return ResolvePath(path, as_file, build_config_root_path_).NormalizePathSeparatorsTo('/');
 }
 
 void BuildSettings::ItemDefined(std::unique_ptr<Item> item) const {

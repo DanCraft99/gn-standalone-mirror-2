@@ -789,7 +789,19 @@ bool Setup::FillOtherConfig(const base::CommandLine& cmdline) {
     return false;
   }
   build_settings_.set_build_config_file(
-      SourceFile(build_config_value->string_value()));
+    SourceFile(build_config_value->string_value()));
+
+  const Value* build_config_root_value =
+  dotfile_scope_.GetValue("buildconfig_root", true);
+  if (build_config_root_value) {
+    if (!build_config_root_value->VerifyTypeIs(Value::STRING, &err)) {
+      err.PrintToStdout();
+      return false;
+    }
+
+    build_settings_.SetBuildConfigRootPath(
+      UTF8ToFilePath(build_config_root_value->string_value()));
+  }
 
   // Targets to check.
   const Value* check_targets_value =

@@ -5,6 +5,8 @@
 #include "tools/gn/action_target_generator.h"
 
 #include "base/stl_util.h"
+#include "base/files/file_path.h"
+#include "base/files/file_util.h"
 #include "tools/gn/build_settings.h"
 #include "tools/gn/err.h"
 #include "tools/gn/filesystem_utils.h"
@@ -108,6 +110,19 @@ bool ActionTargetGenerator::FillScript() {
       *value, err_, scope_->settings()->build_settings()->root_path_utf8());
   if (err_->has_error())
     return false;
+
+  if (!scope_->settings()->build_settings()->build_config_root_path().empty()) {
+    base::FilePath configFilePath = scope_->settings()->build_settings()->GetFullPathBuildConfig(script_file);
+    if (base::PathExists(configFilePath))
+    {
+      std::string p = FilePathToUTF8(configFilePath);
+#if defined(OS_WIN)
+      p = "/" + p;
+#endif
+      script_file = SourceFile(p);
+    }
+  }
+
   target_->action_values().set_script(script_file);
   return true;
 }

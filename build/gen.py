@@ -367,6 +367,8 @@ def WriteGNNinja(path, platform, host, options):
         '/wd4505',
         '/wd4838',
         '/wd4996',
+        '/wd4505',
+        '/wd4819',
     ])
     cflags_cc.extend([
         '/GR-',

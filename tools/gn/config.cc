@@ -27,6 +27,16 @@ bool Config::OnResolved(Err* err) {
   DCHECK(!resolved_);
   resolved_ = true;
 
+  if (!settings()->build_settings()->build_config_root_path().empty() &&
+       label().name() == "default_include_dirs") {
+     std::string configFilePath =
+         settings()->build_settings()->build_config_root_path_utf8();
+ #if defined(OS_WIN)
+     configFilePath = "/" + configFilePath;
+ #endif
+     own_values_.include_dirs().push_back(SourceDir(configFilePath));
+  }
+
   if (!configs_.empty()) {
     // Subconfigs, flatten.
     //

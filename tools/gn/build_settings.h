@@ -59,6 +59,10 @@ class BuildSettings {
   const SourceFile& build_config_file() const { return build_config_file_; }
   void set_build_config_file(const SourceFile& f) { build_config_file_ = f; }
 
+  const base::FilePath& build_config_root_path() const { return build_config_root_path_; }
+  const std::string& build_config_root_path_utf8() const { return build_config_root_path_utf8_; }
+  void SetBuildConfigRootPath(const base::FilePath& r);
+
   // Path to a file containing the default text to use when running `gn args`.
   const SourceFile& arg_file_template_path() const {
     return arg_file_template_path_;
@@ -97,6 +101,10 @@ class BuildSettings {
   base::FilePath GetFullPathSecondary(const std::string& path,
                                       bool as_file) const;
 
+  base::FilePath GetFullPathBuildConfig(const SourceFile& file) const;
+  base::FilePath GetFullPathBuildConfig(const SourceDir& dir) const;
+  base::FilePath GetFullPathBuildConfig(const std::string& path, bool as_file) const;
+
   // Called when an item is defined from a background thread.
   void ItemDefined(std::unique_ptr<Item> item) const;
   void set_item_defined_callback(ItemDefinedCallback cb) {
@@ -128,6 +136,8 @@ class BuildSettings {
   base::FilePath python_path_;
 
   SourceFile build_config_file_;
+  base::FilePath build_config_root_path_;
+  std::string build_config_root_path_utf8_;
   SourceFile arg_file_template_path_;
   SourceDir build_dir_;
   Args build_args_;

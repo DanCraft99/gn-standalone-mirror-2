@@ -4,6 +4,8 @@
 
 #include <stddef.h>
 
+#include "base/files/file_path.h"
+#include "base/files/file_util.h"
 #include "tools/gn/build_settings.h"
 #include "tools/gn/filesystem_utils.h"
 #include "tools/gn/functions.h"
@@ -64,12 +66,16 @@ Value ConvertOnePath(const Scope* scope,
 
   if (!value.VerifyTypeIs(Value::STRING, err))
     return result;
+
+  const BuildSettings* build_settings = scope->settings()->build_settings();
   const std::string& string_value = value.string_value();
 
   bool looks_like_dir = ValueLooksLikeDir(string_value);
 
+
   // System-absolute output special case.
-  if (convert_to_system_absolute) {
+  if (convert_to_system_absolute ||
+      !build_settings->build_config_root_path().empty()) {
     base::FilePath system_path;
     if (looks_like_dir) {
       system_path = scope->settings()->build_settings()->GetFullPath(
@@ -84,6 +90,26 @@ Value ConvertOnePath(const Scope* scope,
     }
     if (err->has_error())
       return Value();
+
+    if (!build_settings->build_config_root_path().empty() &&
+        !base::PathExists(system_path)) {
+      base::FilePath system_config_path;
+      if (looks_like_dir) {
+        system_config_path = build_settings->GetFullPathBuildConfig(
+          from_dir.ResolveRelativeDir(value, err,
+            build_settings->build_config_root_path_utf8()));
+      }
+      else {
+        system_config_path = build_settings->GetFullPathBuildConfig(
+          from_dir.ResolveRelativeFile(value, err,
+            build_settings->build_config_root_path_utf8()));
+      }
+      if (err->has_error())
+        return Value();
+
+      if (base::PathExists(system_config_path))
+        system_path = system_config_path;
+    }
 
     result = Value(function, FilePathToUTF8(system_path));
     if (looks_like_dir)

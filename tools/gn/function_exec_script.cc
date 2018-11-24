@@ -145,6 +145,10 @@ Value RunExecScript(Scope* scope,
     return Value();
   base::FilePath script_path =
       build_settings->GetFullPath(script_source_path, true);
+  if (!build_settings->build_config_root_path().empty() &&
+      !base::PathExists(script_path)) {
+      script_path = build_settings->GetFullPathBuildConfig(script_source_path, true);
+  }
   if (!build_settings->secondary_source_path().empty() &&
       !base::PathExists(script_path)) {
     // Fall back to secondary source root when the file doesn't exist.

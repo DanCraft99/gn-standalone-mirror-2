@@ -112,7 +112,7 @@ bool ActionTargetGenerator::FillScript() {
     return false;
 
   if (!scope_->settings()->build_settings()->build_config_root_path().empty()) {
-    base::FilePath configFilePath = scope_->settings()->build_settings()->GetFullPathBuildConfig(script_file);
+    base::FilePath configFilePath = scope_->settings()->build_settings()->GetFullPathBuildConfigRoot(script_file);
     if (base::PathExists(configFilePath))
     {
       std::string p = FilePathToUTF8(configFilePath);

@@ -54,6 +54,7 @@ bool DoLoadFile(const LocationRange& origin,
   base::FilePath primary_path = build_settings->GetFullPath(name);
   ScopedTrace load_trace(TraceItem::TRACE_FILE_LOAD, name.value());
   if (!file->Load(primary_path)) {
+    bool found_in_path = false;
     if (!build_settings->secondary_source_path().empty()) {
       // Fall back to secondary source tree.
       base::FilePath secondary_path =
@@ -66,7 +67,29 @@ bool DoLoadFile(const LocationRange& origin,
                        FilePathToUTF8(secondary_path));
         return false;
       }
-    } else {
+
+      found_in_path = true;
+    }
+
+    // Fall back to build config root
+    if (!found_in_path && !build_settings->build_config_root_path().empty()) {
+      base::FilePath build_root_path =
+          build_settings->GetFullPathBuildConfigRoot(name);
+      if (!file->Load(build_root_path))
+      {
+        *err = Err(origin, "Can't load input file.",
+                   "Unable to load:\n  " +
+                    FilePathToUTF8(primary_path) + "\n"
+                    "I also checked in the build config tree for:\n  " +
+                    FilePathToUTF8(build_root_path));
+        return false;
+      }
+
+      found_in_path = true;  // build_config_root_path
+    }
+
+    if (!found_in_path)
+    {
       *err = Err(origin,
                  "Unable to load \"" + FilePathToUTF8(primary_path) + "\".");
       return false;

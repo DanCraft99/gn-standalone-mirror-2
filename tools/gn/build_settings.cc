@@ -8,6 +8,7 @@
 
 #include "base/files/file_util.h"
 #include "tools/gn/filesystem_utils.h"
+#include "util/exe_path.h"
 
 BuildSettings::BuildSettings() = default;
 
@@ -40,8 +41,8 @@ void BuildSettings::SetBuildConfigRootPath(const base::FilePath& r) {
   DCHECK(r.value()[r.value().size() - 1] != base::FilePath::kSeparators[0]);
   if (r == UTF8ToFilePath("GN_INSTALL_PATH"))
   {
-    //PathService::Get(base::DIR_EXE, &build_config_root_path_);
-    //build_config_root_path_utf8_ = FilePathToUTF8(build_config_root_path_);
+    build_config_root_path_ = GetExePath().DirName().NormalizePathSeparatorsTo('/');
+    build_config_root_path_utf8_ = FilePathToUTF8(build_config_root_path_);
   }
   else
   {
@@ -86,17 +87,17 @@ base::FilePath BuildSettings::GetFullPathSecondary(const std::string& path,
       .NormalizePathSeparatorsTo('/');
 }
 
-base::FilePath BuildSettings::GetFullPathBuildConfig(const SourceFile& file) const
+base::FilePath BuildSettings::GetFullPathBuildConfigRoot(const SourceFile& file) const
 {
   return file.Resolve(build_config_root_path_).NormalizePathSeparatorsTo('/');
 }
 
-base::FilePath BuildSettings::BuildSettings::GetFullPathBuildConfig(const SourceDir& dir) const
+base::FilePath BuildSettings::BuildSettings::GetFullPathBuildConfigRoot(const SourceDir& dir) const
 {
   return dir.Resolve(build_config_root_path_).NormalizePathSeparatorsTo('/');
 }
 
-base::FilePath BuildSettings::GetFullPathBuildConfig(const std::string& path, bool as_file) const
+base::FilePath BuildSettings::GetFullPathBuildConfigRoot(const std::string& path, bool as_file) const
 {
   return ResolvePath(path, as_file, build_config_root_path_).NormalizePathSeparatorsTo('/');
 }

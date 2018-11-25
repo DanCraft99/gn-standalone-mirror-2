@@ -101,9 +101,9 @@ class BuildSettings {
   base::FilePath GetFullPathSecondary(const std::string& path,
                                       bool as_file) const;
 
-  base::FilePath GetFullPathBuildConfig(const SourceFile& file) const;
-  base::FilePath GetFullPathBuildConfig(const SourceDir& dir) const;
-  base::FilePath GetFullPathBuildConfig(const std::string& path, bool as_file) const;
+  base::FilePath GetFullPathBuildConfigRoot(const SourceFile& file) const;
+  base::FilePath GetFullPathBuildConfigRoot(const SourceDir& dir) const;
+  base::FilePath GetFullPathBuildConfigRoot(const std::string& path, bool as_file) const;
 
   // Called when an item is defined from a background thread.
   void ItemDefined(std::unique_ptr<Item> item) const;

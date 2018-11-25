@@ -95,12 +95,12 @@ Value ConvertOnePath(const Scope* scope,
         !base::PathExists(system_path)) {
       base::FilePath system_config_path;
       if (looks_like_dir) {
-        system_config_path = build_settings->GetFullPathBuildConfig(
+        system_config_path = build_settings->GetFullPathBuildConfigRoot(
           from_dir.ResolveRelativeDir(value, err,
             build_settings->build_config_root_path_utf8()));
       }
       else {
-        system_config_path = build_settings->GetFullPathBuildConfig(
+        system_config_path = build_settings->GetFullPathBuildConfigRoot(
           from_dir.ResolveRelativeFile(value, err,
             build_settings->build_config_root_path_utf8()));
       }

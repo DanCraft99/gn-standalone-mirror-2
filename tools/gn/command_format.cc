@@ -112,6 +112,7 @@ class Printer {
   enum SequenceStyle {
     kSequenceStyleList,
     kSequenceStyleBracedBlock,
+    kSequenceStyleBracedBlockAlreadyOpen,
   };
 
   struct Metrics {
@@ -328,11 +329,15 @@ void Printer::AnnotatePreferredMultilineAssignment(const BinaryOpNode* binop) {
 }
 
 void Printer::SortIfSourcesOrDeps(const BinaryOpNode* binop) {
-  if (binop->comments() && !binop->comments()->before().empty() &&
-      binop->comments()->before()[0].value().as_string() == "# NOSORT") {
-    // Allow disabling of sort for specific actions that might be
-    // order-sensitive.
-    return;
+  if (const Comments* comments = binop->comments()) {
+    const std::vector<Token>& before = comments->before();
+    if (!before.empty() &&
+        (before.front().value().as_string() == "# NOSORT" ||
+         before.back().value().as_string() == "# NOSORT")) {
+      // Allow disabling of sort for specific actions that might be
+      // order-sensitive.
+      return;
+    }
   }
   const IdentifierNode* ident = binop->left()->AsIdentifier();
   const ListNode* list = binop->right()->AsList();
@@ -423,6 +428,8 @@ void Printer::SortImports(std::vector<std::unique_ptr<PARSENODE>>& statements) {
       const PARSENODE* node = statements[i].get();
       int line_number =
           prev ? prev->GetRange().end().line_number() + 1 : start_line;
+      if (node->comments() && !node->comments()->before().empty())
+        line_number++;
       const_cast<FunctionCallNode*>(node->AsFunctionCall())
           ->SetNewLocation(line_number);
       prev = node;
@@ -718,10 +725,10 @@ int Printer::Expr(const ParseNode* root,
              false);
   } else if (const ConditionNode* condition = root->AsConditionNode()) {
     Print("if (");
-    // TODO(scottmg): The { needs to be included in the suffix here.
-    Expr(condition->condition(), kPrecedenceLowest, ") ");
-    Sequence(kSequenceStyleBracedBlock, condition->if_true()->statements(),
-             condition->if_true()->End(), false);
+    Expr(condition->condition(), kPrecedenceLowest, ") {");
+    Sequence(kSequenceStyleBracedBlockAlreadyOpen,
+             condition->if_true()->statements(), condition->if_true()->End(),
+             false);
     if (condition->if_false()) {
       Print(" else ");
       // If it's a block it's a bare 'else', otherwise it's an 'else if'. See
@@ -778,10 +785,13 @@ void Printer::Sequence(SequenceStyle style,
                        const std::vector<std::unique_ptr<PARSENODE>>& list,
                        const ParseNode* end,
                        bool force_multiline) {
-  if (style == kSequenceStyleList)
+  if (style == kSequenceStyleList) {
     Print("[");
-  else if (style == kSequenceStyleBracedBlock)
+  } else if (style == kSequenceStyleBracedBlock) {
     Print("{");
+  } else if (style == kSequenceStyleBracedBlockAlreadyOpen) {
+    style = kSequenceStyleBracedBlock;
+  }
 
   if (style == kSequenceStyleBracedBlock) {
     force_multiline = true;

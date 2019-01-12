@@ -89,6 +89,8 @@ def main(argv):
                     help='Do not generate last_commit_position.h.')
   parser.add_option('--out-path',
                     help='The path to generate the build files in.')
+  parser.add_option('--no-strip', action='store_true',
+                    help='Don\'t strip release build. Useful for profiling.')
   options, args = parser.parse_args(argv)
 
   if args:
@@ -275,6 +277,8 @@ def WriteGNNinja(path, platform, host, options):
     else:
       cflags.append('-DNDEBUG')
       cflags.append('-O3')
+      if options.no_strip:
+        cflags.append('-g')
       ldflags.append('-O3')
       # Use -fdata-sections and -ffunction-sections to place each function
       # or data item into its own section so --gc-sections can eliminate any
@@ -288,12 +292,13 @@ def WriteGNNinja(path, platform, host, options):
         ldflags.append('-Wl,--gc-sections')
 
       # Omit all symbol information from the output file.
-      if platform.is_darwin():
-        ldflags.append('-Wl,-S')
-      elif platform.is_aix():
-        ldflags.append('-Wl,-s')
-      else:
-        ldflags.append('-Wl,-strip-all')
+      if options.no_strip is None:
+        if platform.is_darwin():
+          ldflags.append('-Wl,-S')
+        elif platform.is_aix():
+          ldflags.append('-Wl,-s')
+        else:
+          ldflags.append('-Wl,-strip-all')
 
       # Enable identical code-folding.
       if options.use_icf:
@@ -423,6 +428,7 @@ def WriteGNNinja(path, platform, host, options):
         'tools/gn/command_format.cc',
         'tools/gn/command_gen.cc',
         'tools/gn/command_help.cc',
+        'tools/gn/command_meta.cc',
         'tools/gn/command_ls.cc',
         'tools/gn/command_path.cc',
         'tools/gn/command_refs.cc',
@@ -457,6 +463,7 @@ def WriteGNNinja(path, platform, host, options):
         'tools/gn/function_template.cc',
         'tools/gn/function_toolchain.cc',
         'tools/gn/function_write_file.cc',
+        'tools/gn/generated_file_target_generator.cc',
         'tools/gn/group_target_generator.cc',
         'tools/gn/header_checker.cc',
         'tools/gn/import_manager.cc',
@@ -471,12 +478,15 @@ def WriteGNNinja(path, platform, host, options):
         'tools/gn/lib_file.cc',
         'tools/gn/loader.cc',
         'tools/gn/location.cc',
+        'tools/gn/metadata.cc',
+        'tools/gn/metadata_walk.cc',
         'tools/gn/ninja_action_target_writer.cc',
         'tools/gn/ninja_binary_target_writer.cc',
         'tools/gn/ninja_build_writer.cc',
         'tools/gn/ninja_bundle_data_target_writer.cc',
         'tools/gn/ninja_copy_target_writer.cc',
         'tools/gn/ninja_create_bundle_target_writer.cc',
+        'tools/gn/ninja_generated_file_target_writer.cc',
         'tools/gn/ninja_group_target_writer.cc',
         'tools/gn/ninja_target_command_util.cc',
         'tools/gn/ninja_target_writer.cc',
@@ -570,12 +580,15 @@ def WriteGNNinja(path, platform, host, options):
         'tools/gn/label_pattern_unittest.cc',
         'tools/gn/label_unittest.cc',
         'tools/gn/loader_unittest.cc',
+        'tools/gn/metadata_unittest.cc',
+        'tools/gn/metadata_walk_unittest.cc',
         'tools/gn/ninja_action_target_writer_unittest.cc',
         'tools/gn/ninja_binary_target_writer_unittest.cc',
         'tools/gn/ninja_build_writer_unittest.cc',
         'tools/gn/ninja_bundle_data_target_writer_unittest.cc',
         'tools/gn/ninja_copy_target_writer_unittest.cc',
         'tools/gn/ninja_create_bundle_target_writer_unittest.cc',
+        'tools/gn/ninja_generated_file_target_writer_unittest.cc',
         'tools/gn/ninja_group_target_writer_unittest.cc',
         'tools/gn/ninja_target_writer_unittest.cc',
         'tools/gn/ninja_toolchain_writer_unittest.cc',
